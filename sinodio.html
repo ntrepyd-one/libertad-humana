@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SinOdio — Índice de Agresividad Semántica</title>
+<link href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #16181d;
+    --paper: #f5f4f0;
+    --accent: #5b4cf0;
+    --accent-soft: #efecff;
+    --live: #1e9e5a;
+    --live-soft: #e4f7ec;
+    --pending: #d98a12;
+    --pending-soft: #fdf1de;
+    --partial: #2b7cd1;
+    --partial-soft: #e8f1fc;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: linear-gradient(180deg, #faf9f6 0%, #f2f1ec 400px, #f2f1ec 100%);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    padding: 28px 32px 60px;
+  }
+  header { margin-bottom: 22px; }
+  .eyebrow { font-size: 11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color: var(--accent); margin-bottom:6px; }
+  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .subtitle { color: #6b6b6b; font-size: 13.5px; margin: 0; }
+
+  .xp-wrap { margin-top:18px; background:#fff; border:1px solid #e7e5e0; border-radius:14px; padding:16px 20px; }
+  .xp-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; }
+  .xp-top .xp-label { font-size:13px; font-weight:700; }
+  .xp-top .xp-pct { font-size:19px; font-weight:800; color: var(--accent); }
+  .xp-bar { position:relative; height:12px; border-radius:999px; background:#ece9ff; overflow:hidden; }
+  .xp-fill {
+    height:100%; border-radius:999px;
+    background: linear-gradient(90deg, #7c6cff, var(--accent));
+    box-shadow: 0 0 10px rgba(91,76,240,.5);
+    transition: width 1.1s cubic-bezier(.2,.8,.2,1);
+    width:0%;
+  }
+  .xp-milestones { display:flex; justify-content:space-between; margin-top:8px; font-size:11px; color:#9a9a9a; }
+
+  .badge-row { display:flex; gap:8px; margin-top:14px; flex-wrap: wrap; }
+  .badge {
+    font-size: 12px; padding: 5px 11px; border-radius: 999px; font-weight: 700;
+    border: 1px solid transparent; display:inline-flex; align-items:center; gap:6px;
+  }
+  .badge.live { background:var(--live-soft); color:var(--live); border-color:#bfe6cc; }
+  .badge.pending { background:var(--pending-soft); color:var(--pending); border-color:#f3dcad; }
+  .badge.partial { background:var(--partial-soft); color:var(--partial); border-color:#c6dbf5; }
+
+  .pulse-dot { width:7px; height:7px; border-radius:50%; background: var(--live); display:inline-block; position:relative; }
+  .pulse-dot::after {
+    content:""; position:absolute; inset:-4px; border-radius:50%; background: var(--live);
+    opacity:.5; animation: pulse 1.8s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { transform:scale(.6); opacity:.55; }
+    80% { transform:scale(2.2); opacity:0; }
+    100% { transform:scale(2.2); opacity:0; }
+  }
+
+  .layout { display:grid; grid-template-columns: 2.1fr 1fr; gap:16px; margin: 22px 0; align-items:stretch; }
+  @media (max-width: 980px){ .layout { grid-template-columns: 1fr; } }
+
+  .grid-cards { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+  .card {
+    background:#fff; border:1px solid #e7e5e0; border-radius:14px; padding:16px 18px;
+    position:relative; overflow:hidden;
+  }
+  .card::before {
+    content:""; position:absolute; top:0; left:0; width:4px; height:100%; background: var(--accent-soft);
+  }
+  .card.live::before { background: var(--live); }
+  .card.pending::before { background: var(--pending); }
+  .card .label { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#8a8a8a; margin-bottom:6px; font-weight:700; }
+  .card .value { font-size:26px; font-weight:800; }
+  .card .note { font-size:12px; color:#9a9a9a; margin-top:4px; }
+
+  .chart-card { background:#fff; border:1px solid #e7e5e0; border-radius:14px; padding:16px 18px; display:flex; flex-direction:column; }
+  .chart-card .label { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#8a8a8a; margin-bottom:10px; font-weight:700; }
+  .chart-holder { position:relative; flex:1; min-height:170px; }
+
+  section { background:#fff; border:1px solid #e7e5e0; border-radius:14px; padding:20px 22px; margin-bottom:18px; }
+  section h2 { font-size:16px; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+  section p.desc { font-size:13px; color:#6b6b6b; margin:0 0 14px; max-width: 780px; }
+
+  .source-list { display:flex; flex-direction:column; gap:10px; }
+  .source-row {
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:12px 14px; border:1px solid #edece7; border-radius:11px; font-size:13.5px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .source-row:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+  .source-row.locked { opacity:.72; }
+  .source-row .name { font-weight:700; }
+  .source-row .desc-inline { color:#8a8a8a; font-size:12.5px; margin-top:2px; }
+  .medal {
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; flex-shrink:0;
+  }
+  .medal.live { background: var(--live-soft); color: var(--live); }
+  .medal.pending { background: var(--pending-soft); color: var(--pending); }
+  .medal.partial { background: var(--partial-soft); color: var(--partial); }
+  .row-left { display:flex; align-items:center; gap:12px; }
+
+  input.search {
+    width:100%; max-width:340px; padding:9px 13px; border:1px solid #ddd; border-radius:9px;
+    font-size:13.5px; margin-bottom:14px; outline:none; transition: border-color .15s;
+  }
+  input.search:focus { border-color: var(--accent); }
+  .gridjs-th { font-size:12px; text-transform:uppercase; letter-spacing:.03em; color:#6b6b6b; }
+  .gridjs-td { font-size:13.5px; }
+  .index-pending { color:#b9b2a3; font-style:italic; }
+  footer { font-size:11.5px; color:#9a9a9a; margin-top:18px; line-height:1.6; }
+  a { color: var(--accent); }
+  .tag-nota { font-size:12.5px; color:var(--pending); background:var(--pending-soft); border:1px solid #f3dcad; border-radius:10px; padding:10px 14px; margin-bottom:14px; }
+  .next-unlock { font-size:12px; color:var(--accent); font-weight:700; }
+
+  .compare-grid { display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:16px; }
+  @media (max-width: 780px){ .compare-grid { grid-template-columns: 1fr; } }
+  select.picker {
+    width:100%; padding:10px 13px; border:1px solid #ddd; border-radius:9px; font-size:13.5px;
+    background:#fff; outline:none; transition: border-color .15s; appearance:none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%238a8a8a'><path d='M5.5 7.5l4.5 4.5 4.5-4.5z'/></svg>");
+    background-repeat:no-repeat; background-position: right 12px center; padding-right:32px;
+  }
+  select.picker:focus { border-color: var(--accent); }
+  .picker-label { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#8a8a8a; font-weight:700; margin-bottom:6px; display:block; }
+  .compare-chart-wrap { position:relative; height:280px; margin-bottom:14px; }
+  .no-data-pill {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-size:12px; font-weight:700; color:#b9b2a3; background:#faf9f6; border:1px dashed #ddd8cc;
+    padding:6px 14px; border-radius:999px; pointer-events:none;
+  }
+  .insight-box {
+    background: var(--accent-soft); border:1px solid #d8d2ff; border-radius:11px; padding:14px 16px;
+    font-size:13px; color:#4a3fc4; line-height:1.55;
+  }
+  .insight-box .insight-tag { font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color: var(--accent); margin-bottom:6px; display:block; }
+
+  /* ---- Rueda estilo World Data Visualization Project ---- */
+  .wheel-dark-card {
+    background: radial-gradient(circle at 50% 38%, #151b3f 0%, #0a0e27 72%);
+    border-radius:20px; padding:22px 22px 26px; position:relative; overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+  }
+  .wheel-topbar { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; flex-wrap:wrap; gap:10px; }
+  .wheel-tabs { display:flex; gap:8px; }
+  .wheel-tab {
+    padding:7px 16px; border-radius:999px; font-size:12.5px; font-weight:700; cursor:pointer;
+    border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:#aab0d6; transition: all .2s;
+    user-select:none;
+  }
+  .wheel-tab.active-a { background: #5b4cf0; border-color: #5b4cf0; color:#fff; box-shadow:0 0 14px rgba(91,76,240,.5); }
+  .wheel-tab.active-b { background: #2b7cd1; border-color: #2b7cd1; color:#fff; box-shadow:0 0 14px rgba(43,124,209,.5); }
+  .wheel-legend { display:flex; gap:14px; flex-wrap:wrap; }
+  .wheel-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:#c9cfe8; font-weight:600; }
+  .wheel-legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .wheel-caption { font-size:11.5px; color:#7d85ae; text-align:center; margin: 4px auto 4px; max-width:600px; }
+  .wheel-canvas-outer { position:relative; height:440px; margin-top:4px; }
+  .wheel-spin { width:100%; height:100%; transition: transform 950ms cubic-bezier(.22,.9,.24,1); }
+  .wheel-center-overlay {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    text-align:center; pointer-events:none; width:280px;
+  }
+  .wheel-center-overlay .metric-name { color:#fff; font-size:14px; font-weight:800; letter-spacing:.02em; margin-bottom:16px; text-transform:uppercase; }
+  .wheel-compare-row { display:flex; justify-content:space-between; align-items:flex-end; gap:6px; }
+  .wheel-compare-col { flex:1; }
+  .wheel-compare-col .p-name { color:#8890bb; font-size:10.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .wheel-compare-col.center .p-name { color:#fff; font-size:12.5px; }
+  .wheel-compare-col .p-value { font-size:19px; font-weight:800; color:#d7dbf5; margin-top:3px; }
+  .wheel-compare-col.center .p-value { font-size:15px; color:#7d85ae; font-weight:700; }
+  .wheel-compare-col .p-tag { font-size:9px; color:#5c6394; text-transform:uppercase; letter-spacing:.05em; margin-top:3px; }
+  .no-data-pill-dark {
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    font-size:11px; font-weight:700; color:#7d85ae; background:rgba(255,255,255,.05);
+    border:1px dashed rgba(255,255,255,.15); padding:5px 13px; border-radius:999px; pointer-events:none;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Fundación Libertad Humana</div>
+  <h1>SinOdio — Índice de Agresividad Semántica del Discurso Público</h1>
+  <p class="subtitle">Chile, 2018 – presente · registro en construcción, actualizado en vivo</p>
+
+  <div class="xp-wrap">
+    <div class="xp-top">
+      <span class="xp-label">Progreso del proyecto — fuentes conectadas</span>
+      <span class="xp-pct" id="xpPct">—</span>
+    </div>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+    <div class="xp-milestones">
+      <span>Registro Congreso</span>
+      <span>+ Gobierno</span>
+      <span>+ Históricos 2018</span>
+      <span>+ Prensa/redes</span>
+      <span>Índice activo</span>
+    </div>
+  </div>
+
+  <div class="badge-row">
+    <span class="badge live"><span class="pulse-dot"></span>Diputados: en vivo</span>
+    <span class="badge partial">Senado: 44/50</span>
+    <span class="badge live"><span class="pulse-dot"></span>Gobierno actual: 22 carteras</span>
+    <span class="badge pending">Índice: bloqueado</span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="grid-cards">
+    <div class="card live">
+      <div class="label">Personas registradas</div>
+      <div class="value" id="totalPersonas">—</div>
+      <div class="note">Diputados + Senadores + Gobierno</div>
+    </div>
+    <div class="card live">
+      <div class="label">Fuentes desbloqueadas</div>
+      <div class="value">3 <span style="color:#c8c4b8; font-weight:600;">/ 6</span></div>
+      <div class="note">Congreso y Gobierno actual</div>
+    </div>
+    <div class="card">
+      <div class="label">Cobertura temporal</div>
+      <div class="value">2026</div>
+      <div class="note">Meta: 2018 → hoy</div>
+    </div>
+    <div class="card pending">
+      <div class="label">Índice promedio</div>
+      <div class="value index-pending">—</div>
+      <div class="note">Se activa al conectar prensa/redes</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="label">Composición del registro</div>
+    <div class="chart-holder"><canvas id="compChart"></canvas></div>
+  </div>
+</div>
+
+<section>
+  <h2>Comparador de personas</h2>
+  <p class="desc">Elige dos personas del registro para comparar su perfil de agresividad semántica por categoría (insultos, deslegitimación, metáforas bélicas, llamados a derrotar, lenguaje reivindicativo). El gráfico se activa automáticamente en cuanto haya una fuente de discurso conectada — por ahora muestra el mismo estado "sin datos" que cualquier tablero honesto debe mostrar cuando no tiene el indicador.</p>
+  <div class="compare-grid">
+    <div>
+      <span class="picker-label">Persona A</span>
+      <select class="picker" id="pickerA"></select>
+    </div>
+    <div>
+      <span class="picker-label">Persona B</span>
+      <select class="picker" id="pickerB"></select>
+    </div>
+  </div>
+  <div class="wheel-dark-card">
+    <div class="wheel-topbar">
+      <div class="wheel-tabs">
+        <div class="wheel-tab active-a" id="tabA">Persona A</div>
+        <div class="wheel-tab" id="tabB">Persona B</div>
+      </div>
+      <div class="wheel-legend" id="wheelLegend"></div>
+    </div>
+    <p class="wheel-caption">Cada cuña es una categoría del índice. Mejor comportamiento (menos hostilidad) hacia el borde exterior. Gira al cambiar de persona o de categoría.</p>
+    <div class="wheel-canvas-outer">
+      <div class="wheel-spin" id="wheelSpin"><canvas id="compareChart"></canvas></div>
+      <div class="wheel-center-overlay">
+        <div class="metric-name" id="wheelMetricName">Índice de agresividad</div>
+        <div class="wheel-compare-row">
+          <div class="wheel-compare-col">
+            <div class="p-name" id="colAName">—</div>
+            <div class="p-value" id="colAValue">—</div>
+            <div class="p-tag">Persona A</div>
+          </div>
+          <div class="wheel-compare-col center">
+            <div class="p-name">Escala</div>
+            <div class="p-value">0–1</div>
+            <div class="p-tag">Referencia</div>
+          </div>
+          <div class="wheel-compare-col">
+            <div class="p-name" id="colBName">—</div>
+            <div class="p-value" id="colBValue">—</div>
+            <div class="p-tag">Persona B</div>
+          </div>
+        </div>
+      </div>
+      <div class="no-data-pill-dark">Sin datos reales — anillos en escala de referencia</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Diputadas y diputados vigentes</h2>
+  <p class="desc">155 diputados en ejercicio, cargados en vivo desde opendata.camara.cl. El campo "Índice" queda vacío hasta conectar una fuente real de discurso público.</p>
+  <input class="search" id="searchDip" placeholder="Buscar por nombre..." />
+  <div id="gridDiputados"></div>
+</section>
+
+<section>
+  <h2>Senadoras y senadores vigentes</h2>
+  <p class="desc">44 de 50 senadores en ejercicio, según la Biblioteca del Congreso Nacional. Los 6 restantes quedaron fuera por un error de paginación en la fuente; se reintentará la carga.</p>
+  <input class="search" id="searchSen" placeholder="Buscar por nombre..." />
+  <div id="gridSenadores"></div>
+</section>
+
+<section>
+  <h2>Gobierno — gabinete actual</h2>
+  <p class="desc">22 carteras del gobierno de José Antonio Kast, vigente desde el 11 de marzo de 2026, con el ajuste de gabinete del 19 de mayo de 2026 ya incorporado (salida de Mara Sedini y Trinidad Steinert).</p>
+  <input class="search" id="searchGob" placeholder="Buscar por nombre o cartera..." />
+  <div id="gridGobierno"></div>
+</section>
+
+<section>
+  <h2>Fuentes de datos — logros por desbloquear</h2>
+  <p class="desc">Cada fila es una fuente real necesaria para completar SinOdio. Desbloqueada = conexión de datos verificada hoy. Parcial = datos reales pero incompletos. Bloqueada = requiere una decisión o contrato de Fundación Libertad Humana. Cero datos simulados.</p>
+  <div class="source-list">
+    <div class="source-row">
+      <div class="row-left"><div class="medal live">✓</div><div><span class="name">Congreso Nacional — Diputados vigentes</span><div class="desc-inline">opendata.camara.cl · 155 de 155 diputados, cargado 13-ago-2026</div></div></div>
+      <div class="badge live">Desbloqueada</div>
+    </div>
+    <div class="source-row">
+      <div class="row-left"><div class="medal partial">~</div><div><span class="name">Congreso Nacional — Senado vigente</span><div class="desc-inline">Biblioteca del Congreso Nacional (bcn.cl) · 44 de 50 senadores; faltan 6 por error de paginación en la fuente</div></div></div>
+      <div class="badge partial">88% completa</div>
+    </div>
+    <div class="source-row">
+      <div class="row-left"><div class="medal live">✓</div><div><span class="name">Gobierno — gabinete actual (Kast, 2026-)</span><div class="desc-inline">22 carteras, DF.cl (20-ene-2026) + El Mostrador/El Dínamo (reshuffle 19-may-2026)</div></div></div>
+      <div class="badge live">Desbloqueada</div>
+    </div>
+    <div class="source-row locked">
+      <div class="row-left"><div class="medal pending">🔒</div><div><span class="name">Congreso — históricos 2018-2022 y 2022-2026</span><div class="desc-inline">La API de la Cámara para períodos recientes está desactualizada; se cargará desde BCN historia política</div></div></div>
+      <div class="badge pending">Por construir</div>
+    </div>
+    <div class="source-row locked">
+      <div class="row-left"><div class="medal pending">🔒</div><div><span class="name">Gobiernos anteriores — Piñera II y Boric</span><div class="desc-inline">Múltiples cambios de gabinete 2018-2026; fuente real: Wikipedia/BCN, compilación pendiente</div></div></div>
+      <div class="badge pending">Por construir</div>
+    </div>
+    <div class="source-row locked">
+      <div class="row-left"><div class="medal pending">🔒</div><div><span class="name">Prensa, TV y redes sociales</span><div class="desc-inline">Sin costo: GDELT (tono de prensa global, 100+ idiomas) y Bluesky/AT Protocol (redes, API pública gratuita). Pagado: Tooldata, con cobertura chilena dedicada y mejor precisión</div></div></div>
+      <div class="badge pending">Decisión pendiente</div>
+    </div>
+  </div>
+  <p class="next-unlock" id="nextUnlock"></p>
+</section>
+
+<div class="tag-nota">Próximo desbloqueo sugerido: conectar GDELT (gratis) para empezar a alimentar el índice de tono de prensa mientras se decide el proveedor pagado. Los gabinetes de Piñera II y Boric se suman en el próximo avance, con las mismas fuentes oficiales.</div>
+
+<footer>
+  Diputados: opendata.camara.cl/wscamaradiputados.asmx/getDiputados_Vigentes (13-ago-2026). Senado: bcn.cl/historiapolitica, listado de senadores en ejercicio (13-ago-2026, parcial). Gobierno: Diario Financiero (20-ene-2026) y El Mostrador / El Dínamo (19-may-2026). Sin datos sintéticos: los campos "bloque" e "índice" están vacíos hasta conectar una fuente real de discurso público.
+</footer>
+
+<script>
+const DIPUTADOS = [{"id": "843", "nombre_completo": "René Manuel García García", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "915", "nombre_completo": "Germán Verdugo Soto", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1009", "nombre_completo": "Jorge Alessandri Vergara", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1012", "nombre_completo": "Boris Barrera Moreno", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1017", "nombre_completo": "Álvaro Carter Fernández", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1025", "nombre_completo": "Catalina Del Real Mihovilovic", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1038", "nombre_completo": "Marcos Ilabaca Cerda", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1044", "nombre_completo": "Raúl Leiva Carvajal", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1056", "nombre_completo": "Emilia Nuyado Ancapichun", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1065", "nombre_completo": "Guillermo Ramírez Diez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1073", "nombre_completo": "Juan Santana Castillo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1075", "nombre_completo": "Diego Schalper Sepúlveda", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1086", "nombre_completo": "Gonzalo Winter Etcheberry", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1099", "nombre_completo": "Jaime Araya Guerrero", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1102", "nombre_completo": "Roberto Arroyo Muñoz", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1104", "nombre_completo": "Chiara Barchiesi Chávez", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1105", "nombre_completo": "Héctor Barría Angulo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1110", "nombre_completo": "Carlos Bianchi Chelech", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1119", "nombre_completo": "Sara Concha Smith", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1131", "nombre_completo": "Mauro González Villarroel", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1132", "nombre_completo": "Jorge Guzmán Zepeda", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1140", "nombre_completo": "Daniel Lilayu Vivanco", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1141", "nombre_completo": "Luis Malla Valenzuela", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1148", "nombre_completo": "Javiera Morales Alvarado", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1152", "nombre_completo": "Gloria Naveillan Arriagada", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1165", "nombre_completo": "Agustín Romero Leiva", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1180", "nombre_completo": "Consuelo Veloso Ávila", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1171", "nombre_completo": "Emilia Schneider Videla", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1172", "nombre_completo": "Stephan Schubert Rubio", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1174", "nombre_completo": "Marco Antonio Sulantay Olivares", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1175", "nombre_completo": "Cristián Tapia Ramos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1183", "nombre_completo": "Flor Weisse Novoa", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1184", "nombre_completo": "Roberto Celedón Fernández", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1186", "nombre_completo": "Ignacio Achurra Díaz", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1195", "nombre_completo": "Carlos Carvajal Gallardo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1199", "nombre_completo": "Jaime Coloma Álamos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1204", "nombre_completo": "Francisco Crisóstomo Llanos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1203", "nombre_completo": "Sebastián Cristoffanini Jaraquemada", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1208", "nombre_completo": "Jorge Díaz Ibarra", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1212", "nombre_completo": "Erich Grohs Marín", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1217", "nombre_completo": "Pier Karlezi Hazleby", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1220", "nombre_completo": "Leandro Kunstmann Collado", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1222", "nombre_completo": "Andrea Macías Palma", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1223", "nombre_completo": "Hans Marowski Cuevas", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1230", "nombre_completo": "Alex Nahuelquin Nahuelquin", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1236", "nombre_completo": "Paula Olmos Contreras", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1241", "nombre_completo": "Patricio Pinilla Valencia", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1242", "nombre_completo": "Rodrigo Ramírez Parra", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1232", "nombre_completo": "Cristian Neira Martínez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1243", "nombre_completo": "Tamara Ramírez Ramírez", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1061", "nombre_completo": "Andrea Parra Sauterel", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1213", "nombre_completo": "Irací Hassler Jacob", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1193", "nombre_completo": "Patricio Briones Moller", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1259", "nombre_completo": "Juan Marcelo Valenzuela Henríquez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "803", "nombre_completo": "René Alinco Bustos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1021", "nombre_completo": "Andrés Celis Montt", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1059", "nombre_completo": "Ximena Ossandón Irarrázabal", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1087", "nombre_completo": "Gael Yeomans Araya", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1114", "nombre_completo": "Félix Bugueño Sotelo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1133", "nombre_completo": "Juan Irarrázaval Rossel", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1153", "nombre_completo": "Coca Ericka Ñanco Vásquez", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1177", "nombre_completo": "Carolina Tello Rojas", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1194", "nombre_completo": "Daniel Bustos Leal", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1240", "nombre_completo": "Zandra Parisi Fernández", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1107", "nombre_completo": "María Francisca Bello Campos", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1205", "nombre_completo": "Carlos Cuadrado Prats", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1250", "nombre_completo": "Bernardo Salinas Maya", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1216", "nombre_completo": "Stephanie Jéldrez Ortiz", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1150", "nombre_completo": "Benjamín Moreno Bascur", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1256", "nombre_completo": "Tatiana Urrutia Herrera", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "986", "nombre_completo": "Marcela Hernando Pérez", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1077", "nombre_completo": "Raúl Soto Mardones", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1170", "nombre_completo": "Luis Sánchez Ossa", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1028", "nombre_completo": "Eduardo Durán Salinas", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1117", "nombre_completo": "Nathalie Castillo Rojas", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1181", "nombre_completo": "Nelson Venegas Salazar", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1229", "nombre_completo": "Javier Muñoz Riquelme", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1214", "nombre_completo": "Constanza Hube Portus", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1258", "nombre_completo": "Guillermo Valdés Carmona", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1191", "nombre_completo": "Valentina Becerra Peña", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1211", "nombre_completo": "Sofía González Cortés", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1225", "nombre_completo": "Cristian Menchaca Pinochet", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1219", "nombre_completo": "Tomás Kast Sommerhoff", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1189", "nombre_completo": "Jaime Bassa Mercado", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1248", "nombre_completo": "Felipe Ross Correa", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1254", "nombre_completo": "Ignacio Urcullú Clèment-Lund", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1263", "nombre_completo": "Sebastián Zamora Soto", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1237", "nombre_completo": "Francisco Orrego Gutiérrez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1015", "nombre_completo": "Jorge Brito Hasbún", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1074", "nombre_completo": "Marisela Santibáñez Novoa", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1116", "nombre_completo": "Felipe Camaño Cárdenas", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1159", "nombre_completo": "Lorena Pizarro Sierra", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1190", "nombre_completo": "Enrique Bassaletti Riess", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1210", "nombre_completo": "Gustavo Gatica Villarroel", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1182", "nombre_completo": "Sebastián Videla Castillo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1122", "nombre_completo": "Luis Alberto Cuello Peña y Lillo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1255", "nombre_completo": "Eileen Urqueta Rojas", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "872", "nombre_completo": "Jaime Mulet Martínez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1054", "nombre_completo": "Francesca Muñoz González", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1100", "nombre_completo": "Cristián Araya Lerdo de Tejada", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1142", "nombre_completo": "Daniel Manouchehri Lobos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1178", "nombre_completo": "Héctor Ulloa Aguilera", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1202", "nombre_completo": "Eduardo Cretton Rebolledo", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1233", "nombre_completo": "Ricardo Neumann Bertín", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "815", "nombre_completo": "Sergio Bobadilla Muñoz", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1013", "nombre_completo": "Alejandro Bernales Maldonado", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1039", "nombre_completo": "Pamela Jiles Moreno", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1062", "nombre_completo": "Joanna Pérez Olea", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1082", "nombre_completo": "Cristóbal Urruticoechea Ríos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1108", "nombre_completo": "Juan Carlos Beltrán Silva", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1128", "nombre_completo": "Ana María Gazmuri Vieira", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1146", "nombre_completo": "José Carlos Meza Pereira", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1166", "nombre_completo": "Natalia Romero Talguia", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1176", "nombre_completo": "Hotuiti Teao Drago", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1188", "nombre_completo": "Marcos Barraza Gómez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1197", "nombre_completo": "Carlos Chandía Alarcón", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1206", "nombre_completo": "Carolina Cucumides Calderón", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1218", "nombre_completo": "José Antonio Kast Adriasola", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1228", "nombre_completo": "Paulina Muñoz Minte", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1238", "nombre_completo": "Álvaro Ortiz Vera", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1198", "nombre_completo": "Paz Charpentier Rajcevich", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1234", "nombre_completo": "Mario Olavarría Rodríguez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1127", "nombre_completo": "Lorena Fries Monleón", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1143", "nombre_completo": "Cristóbal Martínez Ramírez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1157", "nombre_completo": "Marlene Pérez Cartes", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1173", "nombre_completo": "Daniela Serrano Salazar", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1187", "nombre_completo": "Carlo Arqueros Pizarro", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1192", "nombre_completo": "Lilian Betancurt Delgado", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1196", "nombre_completo": "Priscilla Castillo Gerli", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1201", "nombre_completo": "Flor Contreras Vivallo", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1224", "nombre_completo": "Cristian Mella Andaur", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1227", "nombre_completo": "Claudia Mora Vega", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1231", "nombre_completo": "Ximena Naranjo Pinto", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1235", "nombre_completo": "Javier Olivares Avendaño", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1239", "nombre_completo": "Fabián Ossandón Briceño", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1200", "nombre_completo": "Cristian Contreras Radovic", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1244", "nombre_completo": "Claudia Reyes Larenas", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1245", "nombre_completo": "Alejandro Riquelme Ducci", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1246", "nombre_completo": "José Antonio Rivas Villalobos", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1247", "nombre_completo": "Javiera Rodríguez Pascual", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1249", "nombre_completo": "Omar Sabat Guzmán", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1251", "nombre_completo": "Macarena Santelices Cañas", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1252", "nombre_completo": "Constanza Schonhaut Soto", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1253", "nombre_completo": "Fernando Ugarte Tejeda", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1257", "nombre_completo": "Alejandra Valdebenito Torres", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1260", "nombre_completo": "César Valenzuela Maass", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1261", "nombre_completo": "Daniel Valenzuela Salazar", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1262", "nombre_completo": "Diego Vergara Rodríguez", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1264", "nombre_completo": "Fernando Zamorano Peralta", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1209", "nombre_completo": "Matías Fernández Hartwig", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1221", "nombre_completo": "Benjamín Lorca Inzunza", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1226", "nombre_completo": "José Montalva Feuerhake", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1060", "nombre_completo": "Luis Pardo Sáinz", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1207", "nombre_completo": "Valentina Cáceres Monsálvez", "sexo": "Femenino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}, {"id": "1215", "nombre_completo": "Álvaro Jofré Cáceres", "sexo": "Masculino", "cargo": "Diputado/a", "bloque": "Por clasificar", "periodo": "2026-2030 (vigente)", "indice": null}];
+const SENADORES = [{"nombre_completo": "Pedro Araya Guerrero", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Danisa Astudillo Peiretti", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Andrea Paz Balladares Letelier", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Miguel Becker Alvear", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Karim Antonio Bianchi Retamales", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Miguel Ángel Calisto Águila", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Fabiola Campillai Rojas", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Karol Aída Cariola Oliva", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Rodolfo Rafael Carter Fernández", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "María Loreto Carvajal Ambiado", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Juan Luis Castro González", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Ricardo Patricio Celis Araya", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Daniella Valentina Cicardini Milla", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Luciano Cruz Coke Carvallo", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Alfonso Arturo De Urresti Longton", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "José Manuel Rojo Edwards Silva", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Fidel Edgardo Espinoza Sandoval", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Iván Alberto Flores García", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Camila Alejandra Flores Oporto", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Sergio Alfredo Gahona Salazar", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "María José Gatica Bertín", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Francisco Huenchumilla Jaramillo", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Diego Eduardo Ibáñez Cotroneo", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Vanessa Olimpia Kaiser Barents-von Hohenhagen", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Sebastián Keitel Bianchi", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Alejandro Kusanovic Glusevic", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Carlos Ignacio Kuschel Silva", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Enrique Lee Flores", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Andrés Longton Herrera", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Javier Ignacio Macaya Danus", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Vlado Mirosevic Verdugo", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Iván Moreira Barros", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Daniel Ignacio Núñez Arancibia", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Paulina Andrea Núñez Urrutia", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Ximena Loreto Ordenes Neira", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Manuel José Ossandón Irarrázabal", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Claudia Pascual Grau", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Yasna Provoste Campillay", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Gastón René Saavedra Chandía", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Beatriz de Jesús Sánchez Muñoz", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Gustavo Adolfo Sanhueza Dueñas", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Alejandra Sepúlveda Orbenes", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Arturo Squella Ovalle", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}, {"nombre_completo": "Renzo Aldo Trisotti Martínez", "cargo": "Senador/a", "periodo": "2022-2030 / 2026-2034 (vigente)", "bloque": "Por clasificar", "indice": null}];
+const GOBIERNO = [{"nombre_completo": "Claudio Alvarado", "cargo": "Interior y Seguridad Pública / Secretaría Gral. de Gobierno (biministro)", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "José García Ruminot", "cargo": "Secretaría General de la Presidencia", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Jorge Quiroz", "cargo": "Hacienda", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Martín Arrau", "cargo": "Seguridad Pública", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Louis De Grange", "cargo": "Transportes y Telecomunicaciones / Obras Públicas (biministro)", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Tomás Rau", "cargo": "Trabajo y Previsión Social", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Iván Poduje", "cargo": "Vivienda y Urbanismo", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Daniel Mas", "cargo": "Minería / Economía, Fomento y Turismo (biministro)", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Ximena Rincón", "cargo": "Energía", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Francisco Pérez-Mackenna", "cargo": "Relaciones Exteriores", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "María Jesús Wulf", "cargo": "Desarrollo Social y Familia", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Francisca Toledo", "cargo": "Medio Ambiente", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "May Chomali", "cargo": "Salud", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Fernando Rabat", "cargo": "Justicia y Derechos Humanos", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Fernando Barros", "cargo": "Defensa Nacional", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "María Paz Arzola", "cargo": "Educación", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Jaime Campos", "cargo": "Agricultura", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Judith Marín", "cargo": "Mujer y Equidad de Género", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Natalia Duco", "cargo": "Deporte", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Francisco Undurraga", "cargo": "Culturas, las Artes y el Patrimonio", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Ximena Lincolao", "cargo": "Ciencia, Tecnología, Conocimiento e Innovación", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}, {"nombre_completo": "Catalina Parot", "cargo": "Bienes Nacionales", "periodo": "Gobierno Kast, 2026- (actualizado 19-may-2026)", "bloque": "Gobierno", "indice": null}];
+
+document.getElementById('totalPersonas').textContent = DIPUTADOS.length + SENADORES.length + GOBIERNO.length;
+
+// XP bar: 5 milestones, 2 fully done (Congreso vigente + Gobierno), Senado counts as 0.8 of a milestone
+const progress = (1 + 0.8 + 1) / 5; // Diputados + Senado(parcial) + Gobierno, sobre 5 hitos totales
+const pct = Math.round(progress * 100);
+document.getElementById('xpPct').textContent = pct + '%';
+requestAnimationFrame(() => {
+  setTimeout(() => { document.getElementById('xpFill').style.width = pct + '%'; }, 150);
+});
+document.getElementById('nextUnlock').textContent = '→ Próximo hito: históricos de Congreso 2018-2026 (BCN)';
+
+function buildGrid(containerId, data) {
+  const columns = [
+    { id: 'nombre_completo', name: 'Nombre' },
+    { id: 'cargo', name: 'Cargo' },
+    { id: 'periodo', name: 'Período' },
+    { id: 'bloque', name: 'Bloque' },
+    { id: 'indice', name: 'Índice (0-1)', formatter: (cell) => cell === null ? gridjs.html('<span class="index-pending">pendiente</span>') : cell }
+  ];
+  return new gridjs.Grid({
+    columns: columns,
+    data: data,
+    sort: true,
+    pagination: { limit: 12 },
+    search: false,
+  }).render(document.getElementById(containerId));
+}
+
+const gridDip = buildGrid('gridDiputados', DIPUTADOS);
+const gridSen = buildGrid('gridSenadores', SENADORES);
+const gridGob = buildGrid('gridGobierno', GOBIERNO);
+
+document.getElementById('searchDip').addEventListener('input', (e) => {
+  gridDip.updateConfig({ search: { keyword: e.target.value.trim() } }).forceRender();
+});
+document.getElementById('searchSen').addEventListener('input', (e) => {
+  gridSen.updateConfig({ search: { keyword: e.target.value.trim() } }).forceRender();
+});
+document.getElementById('searchGob').addEventListener('input', (e) => {
+  gridGob.updateConfig({ search: { keyword: e.target.value.trim() } }).forceRender();
+});
+
+const ctx = document.getElementById('compChart');
+new Chart(ctx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Diputados (155)', 'Senado (44)', 'Gobierno (22)'],
+    datasets: [{
+      data: [DIPUTADOS.length, SENADORES.length, GOBIERNO.length],
+      backgroundColor: ['#5b4cf0', '#2b7cd1', '#1e9e5a'],
+      borderWidth: 0,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } }
+    }
+  }
+});
+
+// Comparador de personas
+const ALL_PEOPLE = [...DIPUTADOS, ...SENADORES, ...GOBIERNO]
+  .slice()
+  .sort((a, b) => a.nombre_completo.localeCompare(b.nombre_completo, 'es'));
+
+function fillPicker(selectEl, defaultIndex) {
+  ALL_PEOPLE.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.nombre_completo + ' — ' + p.cargo;
+    selectEl.appendChild(opt);
+  });
+  selectEl.selectedIndex = defaultIndex;
+}
+const pickerA = document.getElementById('pickerA');
+const pickerB = document.getElementById('pickerB');
+fillPicker(pickerA, 0);
+fillPicker(pickerB, Math.min(1, ALL_PEOPLE.length - 1));
+
+// Categorías reales tomadas del capítulo 2 (proyecto SinOdio original), agrupadas en 4 familias
+// al estilo del wheel de World Data Visualization Project (Economic/Education/Health/Social).
+const WHEEL_GROUPS = [
+  { name: 'Hostilidad directa', color: '#e0505f', cats: ['Insultos explícitos', 'Incitación a la violencia'] },
+  { name: 'Deslegitimación', color: '#3f7ce0', cats: ['Deslegitimación del adversario', 'Enemigo vs. adversario'] },
+  { name: 'Escalamiento retórico', color: '#d9a12b', cats: ['Metáforas bélicas', 'Llamados a "derrotar/barrer"'] },
+  { name: 'Registro emocional', color: '#14b8a6', cats: ['Lenguaje reivindicativo', 'Emocionalidad excesiva'] }
+];
+const CATEGORIES = WHEEL_GROUPS.flatMap(g => g.cats);
+const WEDGE_COLORS = WHEEL_GROUPS.flatMap(g => g.cats.map(() => g.color));
+// Todos los anillos parten en el mismo valor de referencia: no hay medición real todavía.
+const BASELINE = 0.42;
+
+// Legend arriba a la derecha de la rueda, como en el ejemplo
+const legendEl = document.getElementById('wheelLegend');
+WHEEL_GROUPS.forEach(g => {
+  const item = document.createElement('div');
+  item.className = 'wheel-legend-item';
+  item.innerHTML = '<span class="wheel-legend-dot" style="background:' + g.color + '"></span>' + g.name;
+  legendEl.appendChild(item);
+});
+
+Chart.defaults.color = '#aab0d6';
+const compareChart = new Chart(document.getElementById('compareChart'), {
+  type: 'polarArea',
+  data: {
+    labels: CATEGORIES,
+    datasets: [{
+      data: CATEGORIES.map(() => 0), // arranca en 0 para que la rueda "crezca" al cargar
+      backgroundColor: WEDGE_COLORS.map(c => c + 'aa'),
+      borderColor: '#0a0e27',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 1200, easing: 'easeOutQuart' },
+    scales: {
+      r: {
+        min: 0, max: 1,
+        ticks: { display: false },
+        grid: { color: 'rgba(255,255,255,.08)' },
+        angleLines: { color: 'rgba(255,255,255,.08)' },
+        pointLabels: {
+          display: true,
+          color: '#c9cfe8',
+          font: { size: 9.5, weight: '700' },
+          centerPointLabels: true
+        }
+      }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#151b3f', borderColor: 'rgba(255,255,255,.1)', borderWidth: 1,
+        callbacks: { label: (item) => item.label + ': sin datos (referencia visual)' }
+      }
+    },
+    onClick: (evt, elements) => {
+      if (elements.length) spinWheel(elements[0].index * (360 / CATEGORIES.length));
+    }
+  }
+});
+
+function spinWheel(extraDeg) {
+  const el = document.getElementById('wheelSpin');
+  const current = spinWheel._deg || 0;
+  const next = current + 360 + (extraDeg || 0);
+  spinWheel._deg = next % 360;
+  el.style.transform = 'rotate(' + next + 'deg)';
+}
+
+// Anima la entrada: crece de 0 al valor base, como un "loading" honesto, no un dato inventado.
+requestAnimationFrame(() => {
+  setTimeout(() => {
+    compareChart.data.datasets[0].data = CATEGORIES.map(() => BASELINE);
+    compareChart.update();
+  }, 200);
+});
+
+let activePicker = 'A';
+function currentPerson() {
+  return activePicker === 'A' ? ALL_PEOPLE[pickerA.value] : ALL_PEOPLE[pickerB.value];
+}
+function refreshWheelHeader() {
+  const a = ALL_PEOPLE[pickerA.value];
+  const b = ALL_PEOPLE[pickerB.value];
+  document.getElementById('colAName').textContent = a.nombre_completo;
+  document.getElementById('colBName').textContent = b.nombre_completo;
+  document.getElementById('colAValue').textContent = '—';
+  document.getElementById('colBValue').textContent = '—';
+  document.getElementById('wheelMetricName').textContent = 'Índice de agresividad · ' + (activePicker === 'A' ? a.nombre_completo.split(' ')[0] : b.nombre_completo.split(' ')[0]);
+}
+function bounceWheel() {
+  // la rueda gira y "recalcula": movimiento real, sin fabricar el número final
+  spinWheel(90 + Math.random() * 180);
+  compareChart.data.datasets[0].data = CATEGORIES.map(() => 0.1);
+  compareChart.update();
+  setTimeout(() => {
+    compareChart.data.datasets[0].data = CATEGORIES.map(() => BASELINE);
+    compareChart.update();
+  }, 300);
+}
+
+document.getElementById('tabA').addEventListener('click', () => {
+  activePicker = 'A';
+  document.getElementById('tabA').classList.add('active-a');
+  document.getElementById('tabB').classList.remove('active-b');
+  refreshWheelHeader();
+  bounceWheel();
+});
+document.getElementById('tabB').addEventListener('click', () => {
+  activePicker = 'B';
+  document.getElementById('tabB').classList.add('active-b');
+  document.getElementById('tabA').classList.remove('active-a');
+  refreshWheelHeader();
+  bounceWheel();
+});
+pickerA.addEventListener('change', () => { refreshWheelHeader(); if (activePicker === 'A') bounceWheel(); });
+pickerB.addEventListener('change', () => { refreshWheelHeader(); if (activePicker === 'B') bounceWheel(); });
+
+refreshWheelHeader();
+</script>
+
+</body>
+</html>
