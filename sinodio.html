@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SinOdio — Índice de Agresividad Semántica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/theme/mermaid.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/gridjs@5.0.2/dist/gridjs.umd.js" integrity="sha384-/XXDzxe4FsGiAe50i/u9pY/Vy/uX654MHB1xoc1BJNnH1WXHhqHga9g3q5tF4gj7" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
@@ -26,12 +29,12 @@
     margin: 0;
     background: linear-gradient(180deg, #faf9f6 0%, #f2f1ec 400px, #f2f1ec 100%);
     color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     padding: 28px 32px 60px;
   }
   header { margin-bottom: 22px; }
-  .eyebrow { font-size: 11.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color: var(--accent); margin-bottom:6px; }
-  h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .eyebrow { font-size: 11.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color: var(--accent); margin-bottom:8px; }
+  h1 { font-family:"Playfair Display", Georgia, serif; font-weight:600; font-size: 28px; margin: 0 0 6px; letter-spacing: -0.01em; line-height:1.18; }
   .subtitle { color: #6b6b6b; font-size: 13.5px; margin: 0; }
 
   .xp-wrap { margin-top:18px; background:#fff; border:1px solid #e7e5e0; border-radius:14px; padding:16px 20px; }
@@ -153,37 +156,69 @@
     border-radius:20px; padding:22px 22px 26px; position:relative; overflow:hidden;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
   }
-  .wheel-topbar { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; flex-wrap:wrap; gap:10px; }
+  .wheel-topbar { display:flex; justify-content:flex-end; margin-bottom:2px; }
   .wheel-tabs { display:flex; gap:8px; }
   .wheel-tab {
-    padding:7px 16px; border-radius:999px; font-size:12.5px; font-weight:700; cursor:pointer;
+    padding:6px 15px; border-radius:999px; font-size:11.5px; font-weight:600; cursor:pointer;
     border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:#aab0d6; transition: all .2s;
-    user-select:none;
+    user-select:none; font-family:"Inter",sans-serif;
   }
-  .wheel-tab.active-a { background: #5b4cf0; border-color: #5b4cf0; color:#fff; box-shadow:0 0 14px rgba(91,76,240,.5); }
-  .wheel-tab.active-b { background: #2b7cd1; border-color: #2b7cd1; color:#fff; box-shadow:0 0 14px rgba(43,124,209,.5); }
-  .wheel-legend { display:flex; gap:14px; flex-wrap:wrap; }
-  .wheel-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:#c9cfe8; font-weight:600; }
-  .wheel-legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-  .wheel-caption { font-size:11.5px; color:#7d85ae; text-align:center; margin: 4px auto 4px; max-width:600px; }
-  .wheel-canvas-outer { position:relative; height:440px; margin-top:4px; }
-  .wheel-spin { width:100%; height:100%; transition: transform 950ms cubic-bezier(.22,.9,.24,1); }
+  .wheel-tab.active-a { background: #5b4cf0; border-color: #5b4cf0; color:#fff; box-shadow:0 0 14px rgba(91,76,240,.45); }
+  .wheel-tab.active-b { background: #2b7cd1; border-color: #2b7cd1; color:#fff; box-shadow:0 0 14px rgba(43,124,209,.45); }
+
+  .wheel-matchup {
+    display:flex; align-items:center; justify-content:center; gap:22px;
+    margin: 6px auto 4px; flex-wrap:wrap; text-align:center;
+  }
+  .wheel-matchup .side { max-width:280px; }
+  .wheel-matchup .side .p-name {
+    font-family:"Playfair Display", Georgia, serif; font-weight:600; font-style:italic;
+    font-size:19px; line-height:1.25; color:#fff; margin-bottom:3px;
+  }
+  .wheel-matchup .side.a .p-name { color:#a89bff; }
+  .wheel-matchup .side.b .p-name { color:#8ec3f5; }
+  .wheel-matchup .side .p-role { font-size:10.5px; color:#7d85ae; letter-spacing:.02em; }
+  .wheel-matchup .vs {
+    font-family:"Playfair Display", Georgia, serif; font-style:italic; font-size:14px;
+    color:#4a5184; padding-top:2px; flex-shrink:0;
+  }
+
+  .wheel-legend { display:flex; gap:16px; flex-wrap:wrap; justify-content:center; margin: 10px 0 2px; }
+  .wheel-legend-item { display:flex; align-items:center; gap:6px; font-size:10.5px; color:#9aa1c9; font-weight:600; letter-spacing:.01em; }
+  .wheel-legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .wheel-caption { font-size:11px; color:#6b7299; text-align:center; margin: 2px auto 8px; max-width:560px; line-height:1.5; }
+  .wheel-canvas-outer { position:relative; width:100%; max-width:420px; aspect-ratio:1/1; margin:6px auto 0; }
+  .wheel-spin { width:100%; height:100%; }
+  .wheel-spin.pulse canvas { animation: wheelPulse 950ms cubic-bezier(.22,.9,.24,1); }
+  @keyframes wheelPulse {
+    0% { opacity:.35; transform:scale(.94); }
+    60% { opacity:1; transform:scale(1.015); }
+    100% { opacity:1; transform:scale(1); }
+  }
   .wheel-center-overlay {
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    text-align:center; pointer-events:none; width:280px;
+    text-align:center; pointer-events:none; width:60%;
   }
-  .wheel-center-overlay .metric-name { color:#fff; font-size:14px; font-weight:800; letter-spacing:.02em; margin-bottom:16px; text-transform:uppercase; }
-  .wheel-compare-row { display:flex; justify-content:space-between; align-items:flex-end; gap:6px; }
-  .wheel-compare-col { flex:1; }
-  .wheel-compare-col .p-name { color:#8890bb; font-size:10.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .wheel-compare-col.center .p-name { color:#fff; font-size:12.5px; }
-  .wheel-compare-col .p-value { font-size:19px; font-weight:800; color:#d7dbf5; margin-top:3px; }
-  .wheel-compare-col.center .p-value { font-size:15px; color:#7d85ae; font-weight:700; }
-  .wheel-compare-col .p-tag { font-size:9px; color:#5c6394; text-transform:uppercase; letter-spacing:.05em; margin-top:3px; }
+  .wheel-center-overlay .metric-name {
+    color:#c9cfe8; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    margin-bottom:8px; line-height:1.4;
+  }
+  .wheel-center-overlay .metric-value {
+    font-family:"Playfair Display", Georgia, serif; font-style:italic; font-weight:600;
+    font-size:15px; color:#5c6394;
+  }
+  .wheel-cats-list {
+    display:grid; grid-template-columns:1fr 1fr; gap:6px 22px;
+    max-width:520px; margin:16px auto 0; padding-top:14px;
+    border-top:1px solid rgba(255,255,255,.07);
+  }
+  .wheel-cats-item { display:flex; align-items:center; gap:8px; font-size:11px; color:#9aa1c9; line-height:1.4; }
+  .wheel-cats-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
   .no-data-pill-dark {
-    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
-    font-size:11px; font-weight:700; color:#7d85ae; background:rgba(255,255,255,.05);
-    border:1px dashed rgba(255,255,255,.15); padding:5px 13px; border-radius:999px; pointer-events:none;
+    position:absolute; bottom:6px; left:50%; transform:translateX(-50%);
+    font-size:10.5px; font-weight:600; color:#6b7299; background:rgba(255,255,255,.04);
+    border:1px dashed rgba(255,255,255,.13); padding:5px 13px; border-radius:999px; pointer-events:none;
+    white-space:nowrap;
   }
 </style>
 </head>
@@ -262,36 +297,32 @@
   <div class="wheel-dark-card">
     <div class="wheel-topbar">
       <div class="wheel-tabs">
-        <div class="wheel-tab active-a" id="tabA">Persona A</div>
-        <div class="wheel-tab" id="tabB">Persona B</div>
+        <div class="wheel-tab active-a" id="tabA">Ver Persona A</div>
+        <div class="wheel-tab" id="tabB">Ver Persona B</div>
       </div>
-      <div class="wheel-legend" id="wheelLegend"></div>
     </div>
-    <p class="wheel-caption">Cada cuña es una categoría del índice. Mejor comportamiento (menos hostilidad) hacia el borde exterior. Gira al cambiar de persona o de categoría.</p>
+    <div class="wheel-matchup">
+      <div class="side a">
+        <div class="p-name" id="colAName">—</div>
+        <div class="p-role" id="colARole">—</div>
+      </div>
+      <div class="vs">vs.</div>
+      <div class="side b">
+        <div class="p-name" id="colBName">—</div>
+        <div class="p-role" id="colBRole">—</div>
+      </div>
+    </div>
+    <div class="wheel-legend" id="wheelLegend"></div>
+    <p class="wheel-caption">Cada cuña es una categoría del índice. Mejor comportamiento (menos hostilidad) hacia el borde exterior.</p>
     <div class="wheel-canvas-outer">
       <div class="wheel-spin" id="wheelSpin"><canvas id="compareChart"></canvas></div>
       <div class="wheel-center-overlay">
         <div class="metric-name" id="wheelMetricName">Índice de agresividad</div>
-        <div class="wheel-compare-row">
-          <div class="wheel-compare-col">
-            <div class="p-name" id="colAName">—</div>
-            <div class="p-value" id="colAValue">—</div>
-            <div class="p-tag">Persona A</div>
-          </div>
-          <div class="wheel-compare-col center">
-            <div class="p-name">Escala</div>
-            <div class="p-value">0–1</div>
-            <div class="p-tag">Referencia</div>
-          </div>
-          <div class="wheel-compare-col">
-            <div class="p-name" id="colBName">—</div>
-            <div class="p-value" id="colBValue">—</div>
-            <div class="p-tag">Persona B</div>
-          </div>
-        </div>
+        <div class="metric-value">sin datos aún</div>
       </div>
-      <div class="no-data-pill-dark">Sin datos reales — anillos en escala de referencia</div>
+      <div class="no-data-pill-dark">Anillos en escala de referencia — sin datos reales</div>
     </div>
+    <div class="wheel-cats-list" id="wheelCatsList"></div>
   </div>
 </section>
 
@@ -464,6 +495,17 @@ WHEEL_GROUPS.forEach(g => {
   legendEl.appendChild(item);
 });
 
+// Lista estática (no rota, no se superpone) con las 8 categorías individuales, agrupadas por color.
+const catsListEl = document.getElementById('wheelCatsList');
+WHEEL_GROUPS.forEach(g => {
+  g.cats.forEach(catName => {
+    const item = document.createElement('div');
+    item.className = 'wheel-cats-item';
+    item.innerHTML = '<span class="wheel-cats-dot" style="background:' + g.color + '"></span>' + catName;
+    catsListEl.appendChild(item);
+  });
+});
+
 Chart.defaults.color = '#aab0d6';
 const compareChart = new Chart(document.getElementById('compareChart'), {
   type: 'polarArea',
@@ -484,14 +526,9 @@ const compareChart = new Chart(document.getElementById('compareChart'), {
       r: {
         min: 0, max: 1,
         ticks: { display: false },
-        grid: { color: 'rgba(255,255,255,.08)' },
-        angleLines: { color: 'rgba(255,255,255,.08)' },
-        pointLabels: {
-          display: true,
-          color: '#c9cfe8',
-          font: { size: 9.5, weight: '700' },
-          centerPointLabels: true
-        }
+        grid: { color: 'rgba(255,255,255,.07)' },
+        angleLines: { color: 'rgba(255,255,255,.07)' },
+        pointLabels: { display: false }
       }
     },
     plugins: {
@@ -502,18 +539,21 @@ const compareChart = new Chart(document.getElementById('compareChart'), {
       }
     },
     onClick: (evt, elements) => {
-      if (elements.length) spinWheel(elements[0].index * (360 / CATEGORIES.length));
+      if (elements.length) pulseWheel();
     }
   }
 });
 
-function spinWheel(extraDeg) {
+// En vez de rotar el canvas (se veía distorsionado y los textos quedaban ilegibles),
+// se anima un pulso suave sobre el propio canvas al cambiar de persona o categoría.
+function pulseWheel() {
   const el = document.getElementById('wheelSpin');
-  const current = spinWheel._deg || 0;
-  const next = current + 360 + (extraDeg || 0);
-  spinWheel._deg = next % 360;
-  el.style.transform = 'rotate(' + next + 'deg)';
+  el.classList.remove('pulse');
+  void el.offsetWidth; // reinicia la animación aunque se dispare varias veces seguidas
+  el.classList.add('pulse');
 }
+// Alias para no romper otras llamadas existentes a spinWheel(...) en el archivo.
+function spinWheel() { pulseWheel(); }
 
 // Anima la entrada: crece de 0 al valor base, como un "loading" honesto, no un dato inventado.
 requestAnimationFrame(() => {
@@ -531,10 +571,11 @@ function refreshWheelHeader() {
   const a = ALL_PEOPLE[pickerA.value];
   const b = ALL_PEOPLE[pickerB.value];
   document.getElementById('colAName').textContent = a.nombre_completo;
+  document.getElementById('colARole').textContent = a.cargo;
   document.getElementById('colBName').textContent = b.nombre_completo;
-  document.getElementById('colAValue').textContent = '—';
-  document.getElementById('colBValue').textContent = '—';
-  document.getElementById('wheelMetricName').textContent = 'Índice de agresividad · ' + (activePicker === 'A' ? a.nombre_completo.split(' ')[0] : b.nombre_completo.split(' ')[0]);
+  document.getElementById('colBRole').textContent = b.cargo;
+  const first = activePicker === 'A' ? a.nombre_completo.split(' ')[0] : b.nombre_completo.split(' ')[0];
+  document.getElementById('wheelMetricName').textContent = 'Índice de ' + first;
 }
 function bounceWheel() {
   // la rueda gira y "recalcula": movimiento real, sin fabricar el número final
