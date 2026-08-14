@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SinOdio — Observatorio del lenguaje político</title>
+<link rel="stylesheet" href="assets/sinodio-v2.css">
+</head>
+<body>
+<div class="app">
+<header><div class="logo">SINODIO / OBSERVATORIO 01</div><div class="nav"><button data-go="home">Misión</button><button data-go="analysis">Instrumento</button><button data-go="registry">Registro</button><button data-go="sources">Fuentes</button></div><div class="sys"><span class="dot"></span>Chile · campo semántico activo</div></header>
+
+<section class="poster" id="home">
+ <div class="poster-copy">
+   <div class="mission">Fundación Libertad Humana // Programa de lenguaje político</div>
+   <h1>Ir más allá<br><span class="orange">del ruido.</span></h1>
+   <p class="lede">El lenguaje político es territorio. SinOdio es el instrumento construido para explorarlo.</p>
+   <p class="micro">Selecciona una persona. Activa el instrumento. Cada cuña radial representa una dimensión semántica. El discurso verificable determinará hasta dónde avanza cada cuña en el campo.</p>
+   <div class="control"><select id="heroActor"></select><button class="launch" id="fire">LANZAR →</button></div>
+ </div>
+ <div class="visual">
+   <div class="planet"></div><div class="big-number">01</div>
+   <div class="wheel" id="wheel">
+     <svg viewBox="0 0 700 700" id="wedgeSvg"></svg>
+     <div class="core"><div><small>persona activa</small><b id="coreName">—</b><span id="coreRole">selecciona una persona</span></div></div>
+   </div>
+   <div class="readout"><small>lectura del instrumento</small><b id="outName">SELECCIONA UNA CUÑA</b><p id="outText">El instrumento está listo.</p></div>
+   <div class="coordinate">SCL / 33.45° S<br>MISIÓN: DISCURSO PÚBLICO<br>CAMPO: 2018 → PRESENTE</div>
+   <div class="horizon"></div>
+ </div>
+</section>
+
+<div class="band"><div class="statement">“El objetivo no es silenciar la política. Es ver qué está haciendo el lenguaje político.”</div><div><small>Personas registradas</small><strong id="total">—</strong></div><div><small>Estado de fuentes</small><strong>3 / 6</strong></div><div><small>Índice semántico</small><strong>BLOQUEADO</strong></div></div>
+
+<section class="section" id="analysis">
+ <div class="section-head"><div><div class="kicker">MÓDULO 02</div><h2>Entra al instrumento.</h2></div><p>Dos actores políticos. Un mismo campo semántico. La máquina resuelve identidad hoy y sólo calculará comportamiento discursivo cuando exista un corpus verificable.</p></div>
+ <div class="engine">
+  <div class="panel"><h3>Control de misión</h3><label>Persona A</label><select id="actorA"></select><label>Persona B</label><select id="actorB"></select><button class="btn primary" id="runA">ANALIZAR A</button><button class="btn" id="runB">ANALIZAR B</button><button class="btn" id="swap">INTERCAMBIAR A / B</button>
+   <div class="pipeline"><div class="stage" id="s1"><small>01</small><b>ID</b></div><div class="stage" id="s2"><small>02</small><b>CORPUS</b></div><div class="stage" id="s3"><small>03</small><b>PARSEO</b></div><div class="stage" id="s4"><small>04</small><b>MODELO</b></div><div class="stage" id="s5"><small>05</small><b>SALIDA</b></div></div>
+  </div>
+  <div class="machine"><div class="radar"><div class="rings" id="rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div><div class="radar-name" id="miniName">—</div></div>
+   <div class="telemetry"><div class="line"><small>Persona</small><b id="rNombre">—</b><span id="rCargo">—</span></div><div class="line"><small>Registro</small><b>LISTO</b><span>Identidad y cargo público resueltos.</span></div><div class="line"><small>Fuente de discurso</small><b>NO CONECTADA</b><span>Aún no existe un corpus verificable.</span></div><div class="line"><small>Resultado</small><b id="rResultado">BLOQUEADO</b><span id="rText">No se genera ningún puntaje sintético.</span></div></div>
+  </div>
+ </div>
+</section>
+
+<section class="section" id="registry"><div class="section-head"><div><div class="kicker">MÓDULO 03</div><h2>El campo político.</h2></div><p>El registro no es un apéndice de planilla. Es la bahía de lanzamiento: haz clic en una persona y envíala directamente al instrumento semántico.</p></div>
+<div class="registry"><div class="box"><div class="boxhead"><h3>Diputadas y diputados</h3><span class="count">155</span></div><input id="sd" placeholder="Buscar…"><div id="td"></div><div class="pager" id="pd"></div></div><div class="box"><div class="boxhead"><h3>Senadoras y senadores</h3><span class="count">44 / 50</span></div><input id="ss" placeholder="Buscar…"><div id="ts"></div><div class="pager" id="ps"></div></div><div class="box wide"><div class="boxhead"><h3>Gobierno actual</h3><span class="count">22 carteras</span></div><input id="sg" placeholder="Buscar…"><div id="tg"></div><div class="pager" id="pg"></div></div></div></section>
+
+<section class="section" id="sources"><div class="section-head"><div><div class="kicker">MÓDULO 04</div><h2>Combustible del modelo.</h2></div><p>Sólo las fuentes verificables pueden mover la cuña. Sin corpus, no hay puntaje.</p></div><div class="sources"><div class="source"><small>● conectada</small><h3>Diputados vigentes</h3><p>155/155 · Cámara de Diputadas y Diputados</p></div><div class="source"><small>● parcial</small><h3>Senado</h3><p>44/50 · Biblioteca del Congreso Nacional</p></div><div class="source"><small>● conectada</small><h3>Gobierno actual</h3><p>22 carteras</p></div><div class="source"><small>○ pendiente</small><h3>Históricos 2018–2026</h3><p>BCN historia política</p></div><div class="source"><small>○ pendiente</small><h3>Piñera II + Boric</h3><p>Gabinetes históricos</p></div><div class="source"><small>○ pendiente</small><h3>Prensa / TV / redes</h3><p>GDELT · Bluesky · proveedor especializado</p></div></div></section>
+</div>
+<div class="backdrop" id="backdrop"></div><aside class="drawer" id="drawer"><button class="btn" id="closeDrawer">CERRAR ×</button><div class="kicker" style="margin-top:20px">FICHA DE PERSONA</div><h3 id="dNombre">—</h3><dl><dt>Cargo</dt><dd id="dCargo">—</dd><dt>Período</dt><dd id="dPeriod">—</dd><dt>Bloque</dt><dd id="dBloc">—</dd><dt>Índice semántico</dt><dd>Pendiente · requiere discurso verificable</dd></dl><button class="btn primary" id="sendA">ENVIAR COMO A</button><button class="btn" id="sendB">ENVIAR COMO B</button></aside>
+<script src="assets/sinodio-v2.js"></script>
+</body>
+</html>
