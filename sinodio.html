@@ -76,6 +76,18 @@
   .hl-desc { font-size:12.5px; color:#3a3324; line-height:1.6; margin:0 0 22px; }
   .hl-desc strong { color:#181410; }
   .hl-art { width:100%; opacity:.9; }
+  .fuentes-strip { display:flex; flex-wrap:wrap; gap:7px; margin: 0 0 20px; }
+  .fs-badge {
+    font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; padding:5px 10px;
+    border-radius:999px; border:1px solid transparent; color:#221a10; display:inline-flex; align-items:center; gap:5px;
+  }
+  .fs-badge .dot { width:6px; height:6px; border-radius:50%; }
+  .fs-badge.live { background:rgba(63,157,99,.14); border-color:rgba(63,157,99,.4); }
+  .fs-badge.live .dot { background:#3f9d63; }
+  .fs-badge.partial { background:rgba(226,84,28,.12); border-color:rgba(226,84,28,.4); }
+  .fs-badge.partial .dot { background: var(--orange); }
+  .fs-badge.pending { background:rgba(74,46,29,.06); border-color:rgba(74,46,29,.2); color:#5c5644; }
+  .fs-badge.pending .dot { background:#8f887a; }
 
   /* ---- Hero centro: rueda ---- */
   .hero-center { background: var(--black-2); padding: 26px 26px 20px; display:flex; flex-direction:column; align-items:center; border-right:1px solid var(--line-black); }
@@ -251,6 +263,12 @@
       <h1 class="display">SIN<br>ODIO</h1>
       <p class="hl-tag">Mapeamos lo que se dice. Entendemos cómo nos hablamos.</p>
       <p class="hl-desc">SinOdio registra y visualiza el lenguaje político que divide o construye. <strong>Un instrumento ciudadano para comprender el clima político de Chile con datos, contexto y evidencia.</strong> Un proyecto de Fundación Libertad Humana — sin datos sintéticos: lo que no está medido, se muestra vacío.</p>
+      <div class="fuentes-strip">
+        <span class="fs-badge live"><span class="dot"></span>Diputados</span>
+        <span class="fs-badge partial"><span class="dot"></span>Senado 88%</span>
+        <span class="fs-badge live"><span class="dot"></span>Gobierno</span>
+        <span class="fs-badge pending"><span class="dot"></span>Prensa/redes: pendiente</span>
+      </div>
       <svg class="hl-art" viewBox="0 0 260 90" xmlns="http://www.w3.org/2000/svg">
         <circle cx="205" cy="34" r="26" fill="#e2541c" opacity=".85"/>
         <path d="M40 78c10-22 26-34 44-34 16 0 22 10 34 10 10 0 16-6 22-14" stroke="#221a10" stroke-width="2" fill="none" opacity=".5"/>
@@ -262,13 +280,13 @@
       <div class="wheel-outer">
         <canvas id="compareChart"></canvas>
         <div class="wheel-center-overlay">
-          <div class="tn-label">Tensión promedio</div>
+          <div class="tn-label">Índice de lenguaje de odio</div>
           <div class="tn-value" id="tnValue">— —</div>
           <div class="tn-note" id="tnNote">sin datos reales aún</div>
         </div>
       </div>
       <div class="wheel-legend" id="wheelLegend"></div>
-      <div class="wheel-note">Escala de referencia — el índice se activa al conectar una fuente real de discurso público</div>
+      <div class="wheel-note">Ocho patrones de hostilidad discursiva del proyecto SinOdio — escala de referencia, se activa al conectar una fuente real de discurso público</div>
     </div>
 
     <div class="hero-right">
@@ -280,7 +298,7 @@
         <select class="hr-picker" id="pickerA"></select>
       </div>
       <div class="hr-topic-wrap">
-        <div class="hr-topic-label">Tema actual</div>
+        <div class="hr-topic-label">Categoría de lenguaje de odio</div>
         <div class="hr-topic-row">
           <div class="hr-topic-name" id="hrTopicName">—</div>
           <div class="hr-topic-nav">
@@ -289,7 +307,7 @@
           </div>
         </div>
         <div class="hr-stats">
-          <div class="hr-stat"><div class="k">Tensión del tema</div><div class="v">sin datos</div></div>
+          <div class="hr-stat"><div class="k">Nivel de hostilidad</div><div class="v">sin datos</div></div>
           <div class="hr-stat"><div class="k">Posición en ranking</div><div class="v">sin datos</div></div>
         </div>
       </div>
@@ -312,7 +330,7 @@
 
   <div class="foot-grid">
     <div class="fg-stat">
-      <div class="k">Políticos en registro</div>
+      <div class="k">Personas en registro</div>
       <div class="v" id="totalPersonas">—</div>
       <div class="u" id="fgUpdated">—</div>
       <button class="fg-btn" data-target="secExplorar">Ver todos</button>
@@ -335,6 +353,11 @@
     </div>
   </div>
 </div>
+
+<section class="lower" id="secMetodologia">
+  <h2>Metodología</h2>
+  <p class="desc">SinOdio nace en 2018 como un proyecto de monitoreo del discurso político chileno, con un índice de agresividad semántica en escala 0 a 1 sobre líderes de opinión. Esta versión mide ocho patrones de lenguaje de odio (insultos explícitos, incitación a la violencia, deslegitimación del adversario, enemigo vs. adversario, metáforas bélicas, llamados a "derrotar/barrer", lenguaje reivindicativo, emocionalidad excesiva) para todo miembro actual o pasado del gobierno y el Congreso desde 2018, más analistas y paneles de actualidad política. Ningún valor se muestra hasta que existe una fuente de discurso público real conectada y verificable — no hay estimaciones ni datos de relleno.</p>
+</section>
 
 <section class="lower on-cream" id="secExplorar">
   <h2>Diputadas y diputados vigentes</h2>
@@ -388,17 +411,8 @@
   </div>
 </section>
 
-<section class="lower on-cream" id="secMetodologia">
-  <h2>Metodología</h2>
-  <p class="desc">SinOdio nace en 2018 como un proyecto de monitoreo del discurso político chileno, con un índice de agresividad semántica en escala 0 a 1 sobre líderes de opinión. Esta versión mide ocho categorías de hostilidad discursiva (corrupción, inmigración, derechos y libertades, economía y trabajo, identidad y cultura, medios y verdad, instituciones y democracia, seguridad y orden) para todo miembro actual o pasado del gobierno y el Congreso desde 2018, más analistas y paneles de actualidad política. Ningún valor se muestra hasta que existe una fuente de discurso público real conectada y verificable — no hay estimaciones ni datos de relleno.</p>
-</section>
-
-<section class="lower" id="secAcerca">
-  <h2>Acerca de</h2>
-  <p class="desc">SinOdio es un proyecto de Fundación Libertad Humana. El registro de personas se actualiza desde fuentes oficiales abiertas (Cámara de Diputados, Biblioteca del Congreso Nacional, prensa). El objetivo es dar a la ciudadanía una herramienta verificable para observar el clima del discurso público, no para etiquetar personas sin evidencia.</p>
-</section>
-
-<footer>
+<footer id="secAcerca">
+  <strong style="color:var(--white)">Acerca de SinOdio</strong> — un proyecto de Fundación Libertad Humana. El registro de personas se actualiza desde fuentes oficiales abiertas (Cámara de Diputados, Biblioteca del Congreso Nacional, prensa). El objetivo es dar a la ciudadanía una herramienta verificable para observar el clima del discurso público, no para etiquetar personas sin evidencia.<br><br>
   Diputados: opendata.camara.cl/wscamaradiputados.asmx/getDiputados_Vigentes. Senado: bcn.cl/historiapolitica, listado de senadores en ejercicio (parcial). Gobierno: Diario Financiero y El Mostrador / El Dínamo. Sin datos sintéticos: los campos "bloque" e "índice" están vacíos hasta conectar una fuente real de discurso público. <a class="footlink" href="#secAnalisis">Volver arriba</a>
 </footer>
 
@@ -437,16 +451,16 @@ function initials(name) {
   return ((parts[0]||'')[0] + (parts[1]||'')[0]).toUpperCase();
 }
 
-// Los 8 temas del índice (categorías reales del capítulo 2 del libro, agrupadas como temas de tensión discursiva)
+// Los 8 patrones reales de lenguaje de odio (categorías del capítulo 2 del libro / proyecto SinOdio original)
 const TOPICS = [
-  { num:'01', name:'Corrupción', color:'#e2541c' },
-  { num:'02', name:'Inmigración', color:'#c9c2ae' },
-  { num:'03', name:'Derechos y Libertades', color:'#8f887a' },
-  { num:'04', name:'Economía y Trabajo', color:'#e2541c' },
-  { num:'05', name:'Identidad y Cultura', color:'#c9c2ae' },
-  { num:'06', name:'Medios y Verdad', color:'#8f887a' },
-  { num:'07', name:'Instituciones y Democracia', color:'#e2541c' },
-  { num:'08', name:'Seguridad y Orden', color:'#c9c2ae' }
+  { num:'01', name:'Insultos explícitos', color:'#e2541c' },
+  { num:'02', name:'Incitación a la violencia', color:'#e2541c' },
+  { num:'03', name:'Deslegitimación del adversario', color:'#c9c2ae' },
+  { num:'04', name:'Enemigo vs. adversario', color:'#c9c2ae' },
+  { num:'05', name:'Metáforas bélicas', color:'#8f887a' },
+  { num:'06', name:'Llamados a "derrotar/barrer"', color:'#8f887a' },
+  { num:'07', name:'Lenguaje reivindicativo', color:'#5c5644' },
+  { num:'08', name:'Emocionalidad excesiva', color:'#5c5644' }
 ];
 const BASELINE = 0.5; // todas las cuñas parten iguales: no hay medición real todavía
 
@@ -528,6 +542,11 @@ function renderPerson() {
   document.getElementById('hrAvatar').textContent = initials(p.nombre_completo);
   pickerA.value = selIndex;
   document.querySelectorAll('.pcard').forEach(c => c.classList.toggle('sel', Number(c.dataset.idx) === selIndex));
+  pulseWheel();
+}
+function selectTopic(idx) {
+  topicIndex = idx;
+  renderTopic();
   pulseWheel();
 }
 function renderTopic() {
